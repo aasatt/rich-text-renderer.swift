@@ -29,7 +29,12 @@ open class RichTextViewController: UIViewController, NSLayoutManagerDelegate {
 
     /// Document to be rendered.
     public var richTextDocument: RichTextDocument? {
-        didSet { renderDocumentIfNeeded() }
+        didSet {
+            guard richTextDocument != oldValue else { return }
+
+            invalidateLayout()
+            renderDocumentIfNeeded()
+        }
     }
 
     /// Storage for exclusion paths, regions where a text is not rendered in the text container.
@@ -110,6 +115,8 @@ open class RichTextViewController: UIViewController, NSLayoutManagerDelegate {
         setupTextView()
 
         textContainer.size.height = .greatestFiniteMagnitude
+
+        textView.isScrollEnabled = false
     }
 
     private func setupTextView() {
@@ -141,6 +148,8 @@ open class RichTextViewController: UIViewController, NSLayoutManagerDelegate {
         attachmentViews.forEach { _, view in view.removeFromSuperview() }
         attachmentViews.removeAll()
 
+        textView.text = String()
+
         textView.textContainer.exclusionPaths.removeAll()
     }
 
@@ -164,6 +173,8 @@ open class RichTextViewController: UIViewController, NSLayoutManagerDelegate {
     }
 
     private func calculateAndSetPreferredContentSize() {
+        guard textView != nil else { return }
+        
         let newContentSize = textView.sizeThatFits(textView.bounds.size)
         guard newContentSize != preferredContentSize else {
             return
